@@ -1,71 +1,119 @@
+# Vendor Management System
 
-# tele-health
-
-This project is a decentralized healthcare management system deployed on the Internet Computer (IC) using Rust. The system provides a range of healthcare-related services, enabling patient management, doctor scheduling, and health records while ensuring persistence through stable memory. The project is designed to offer scalable and reliable management of healthcare entities in a decentralized environment.
+The Vendor Management System is a Rust-based backend system for managing vendors, services, contracts, and feedback. It uses the Internet Computer (IC) SDK to implement functionalities for managing data in a stable and structured format.
 
 ## Features
 
-### 1. Department Management
-   - **Create Department**: Add new departments for organizational structuring.
-   - **View Department**: Retrieve information about a specific department.
-   - **List Departments**: Retrieve all existing departments.
-   - **Search by Name**: Find departments using a partial or full name match.
+- **Vendor Management:**
+  - Create vendors with details like name, services, contact information, and ratings.
+  - Retrieve vendor details by ID.
+  - List all vendors.
 
-### 2. Doctor Management
-   - **Create Doctor**: Register new doctors and assign them to specific departments.
-   - **View Doctor**: Retrieve doctor details by ID.
-   - **List Doctors**: Retrieve a list of all doctors.
-   - **Doctor Availability**: Update and check doctors' availability.
-   - **Search by Name**: Find doctors using a name search.
+- **Service Management:**
+  - Create services associated with vendors.
+  - Retrieve services by vendor ID.
 
-### 3. Patient Management
-   - **Create Patient**: Register patients with detailed information, including emergency contacts and medical history.
-   - **View Patient**: Retrieve patient information by ID.
-   - **List Patients**: Retrieve all registered patients.
+- **Contract Management:**
+  - Create contracts between vendors and departments.
+  - Retrieve contracts by vendor ID.
 
-### 4. Consultations
-   - **Create Consultation**: Schedule a consultation between a patient and a department.
-   - **View Consultation**: Retrieve details about a consultation.
-   - **List Consultations**: View all consultations or filter by patient.
+- **Feedback Management:**
+  - Add feedback for vendors with a rating and comment.
+  - Retrieve feedback for vendors.
 
-### 5. Chat System
-   - **Create Chat**: Facilitate communication between doctors and patients.
-   - **View Chat**: Retrieve messages by ID.
-   - **List Chats**: Retrieve all chat messages or filter by doctor or patient.
+- **Ratings:**
+  - Calculate average ratings for vendors based on feedback.
 
-### 6. Appointments
-   - **Create Appointment**: Schedule an appointment with a doctor, including optional video link support for virtual consultations.
-   - **View Appointment**: Retrieve appointment details by ID.
-   - **Update Status and Video Link**: Modify the status (scheduled, canceled, completed) or add a video link for virtual meetings.
-   - **List Appointments**: Retrieve all appointments or filter by doctor or patient.
+## Project Structure
 
-### 7. Prescription Management
-   - **Create Prescription**: Record doctor-issued prescriptions for patients.
-   - **View Prescription**: Retrieve specific prescription details.
-   - **List Prescriptions**: Retrieve all prescriptions or filter by patient or doctor.
+- **`Vendor`**: Represents a vendor with details like services offered, contact information, and ratings.
+- **`Service`**: Represents a service provided by a vendor.
+- **`Contract`**: Represents a contract between a vendor and a department.
+- **`Feedback`**: Represents user feedback on vendors.
 
-### 8. Payment Management
-   - **Create Payment**: Record payments associated with appointments.
-   - **View Payment**: Retrieve payment details.
-   - **List Payments**: View all payments or filter by patient or appointment.
+## Data Storage
 
-### 9. Medical Records
-   - **Create Medical Record**: Log a patient’s medical record, including lab results, diagnoses, and treatment details.
-   - **View Medical Record**: Retrieve detailed medical records for a patient.
-   - **List Medical Records**: View all records or filter by patient or doctor.
+The system uses stable structures provided by the Internet Computer SDK:
 
-## Data Persistence and Memory Management
+- **StableBTreeMap**: Used for managing vendors, services, contracts, and feedback data efficiently.
+- **MemoryManager**: Ensures memory is managed and allocated properly.
 
-The project uses stable memory to ensure persistence across canister upgrades. Each entity (departments, doctors, patients, etc.) is stored in separate stable structures, allowing efficient data management. The system ensures the integrity and accessibility of patient records, schedules, and appointments without data loss over time.
+## API Endpoints
 
-## Error Handling
+### Vendor Management
 
-The system provides structured responses for various operations:
-   - **Success**: A success message with details of the operation.
-   - **Error**: General errors or invalid payloads.
-   - **Not Found**: Returned when a requested entity is missing.
-   - **Invalid Payload**: Triggers when required fields are missing or incorrect.
-   - **Payment Status**: Indications for payment completion or failure.
+- `create_vendor(payload: CreateVendorPayload) -> Result<Vendor, Message>`: Create a new vendor.
+- `get_vendor_by_id(id: u64) -> Result<Vendor, Message>`: Retrieve vendor details by ID.
+- `list_all_vendors() -> Result<Vec<Vendor>, Message>`: List all vendors.
+
+### Service Management
+
+- `create_service(payload: CreateServicePayload) -> Result<Service, Message>`: Create a new service.
+- `get_services_by_vendor_id(vendor_id: u64) -> Result<Vec<Service>, Message>`: Retrieve services for a vendor.
+
+### Contract Management
+
+- `create_contract(payload: CreateContractPayload) -> Result<Contract, Message>`: Create a new contract.
+- `get_contracts_by_vendor_id(vendor_id: u64) -> Result<Vec<Contract>, Message>`: Retrieve contracts for a vendor.
+
+### Feedback Management
+
+- `create_feedback(payload: CreateFeedbackPayload) -> Result<Feedback, Message>`: Add feedback for a vendor.
+- `get_feedback_by_vendor_id(vendor_id: u64) -> Result<Vec<Feedback>, Message>`: Retrieve feedback for a vendor.
+- `calculate_average_rating(vendor_id: u64) -> Result<f32, Message>`: Calculate the average rating for a vendor.
+
+## Data Models
+
+### Vendor
+```rust
+struct Vendor {
+    id: u64,
+    name: String,
+    services: Vec<String>,
+    contact: String,
+    email: String,
+    address: String,
+    ratings: Vec<f32>,
+    created_at: u64,
+}
+```
+
+### Service
+```rust
+struct Service {
+    id: u64,
+    vendor_id: u64,
+    name: String,
+    description: String,
+    price: u64,
+    is_available: bool,
+}
+```
+
+### Contract
+```rust
+struct Contract {
+    id: u64,
+    vendor_id: u64,
+    department_id: u64,
+    start_date: u64,
+    end_date: u64,
+    terms: String,
+    is_active: bool,
+}
+```
+
+### Feedback
+```rust
+struct Feedback {
+    id: u64,
+    vendor_id: u64,
+    user_id: u64,
+    rating: f32,
+    comment: String,
+    timestamp: u64,
+}
+```
 
 
 ## Requirements
@@ -93,7 +141,8 @@ $ dfx start --background
 If you want to start working on your project right away, you might want to try the following commands:
 
 ```bash
-$ cd icp_rust_boilerplate/
+$ git clone  https://github.com/fwambakennedy/vendor.git
+$ cd vendor/
 $ dfx help
 $ dfx canister --help
 ```
