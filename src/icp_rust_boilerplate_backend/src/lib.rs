@@ -154,7 +154,64 @@ thread_local! {
         ));
 }
 
-// Functions
+// Helper function to generate unique IDs
+fn generate_unique_id() -> u64 {
+    ID_COUNTER.with(|counter| {
+        let current_value = *counter.borrow().get();
+        counter.borrow_mut().set(current_value + 1).expect("Failed to update counter");
+        current_value
+    })
+}
+
+// Update Vendor Details
+#[ic_cdk::update]
+fn update_vendor_details(id: u64, name: Option<String>, contact: Option<String>, email: Option<String>) -> Result<Vendor, Message> {
+    VENDORS.with(|vendors| {
+        let mut vendors = vendors.borrow_mut();
+        if let Some(mut vendor) = vendors.get(&id) {
+            if let Some(new_name) = name {
+                vendor.name = new_name;
+            }
+            if let Some(new_contact) = contact {
+                vendor.contact = new_contact;
+            }
+            if let Some(new_email) = email {
+                vendor.email = new_email;
+            }
+            vendors.insert(id, vendor.clone());
+            Ok(vendor)
+        } else {
+            Err(Message::NotFound("Vendor not found".to_string()))
+        }
+    })
+}
+
+// Check Service Availability
+#[ic_cdk::query]
+fn check_service_availability(service_id: u64) -> Result<bool, Message> {
+    SERVICES.with(|services| {
+        if let Some(service) = services.borrow().get(&service_id) {
+            Ok(service.is_available)
+        } else {
+            Err(Message::NotFound("Service not found".to_string()))
+        }
+    })
+}
+
+// Deactivate Contract
+#[ic_cdk::update]
+fn deactivate_contract(contract_id: u64) -> Result<Contract, Message> {
+    CONTRACTS.with(|contracts| {
+        let mut contracts = contracts.borrow_mut();
+        if let Some(mut contract) = contracts.get(&contract_id) {
+            contract.is_active = false;
+            contracts.insert(contract_id, contract.clone());
+            Ok(contract)
+        } else {
+            Err(Message::NotFound("Contract not found".to_string()))
+        }
+    })
+}
 
 // Create Vendor
 #[ic_cdk::update]
